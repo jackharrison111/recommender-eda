@@ -2,44 +2,32 @@ import json
 import pandas as pd 
 import numpy as np
 import gensim.parsing.preprocessing as pp
-from nltk.stem import WordNetLemmatizer 
+
 # # Download Wordnet through NLTK in python console:
 import nltk
-nltk.download('wordnet')
 
-
-infile = "data/enriched_instagram.com_collector_20211106_161542..json"
-infiles = [
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-1",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-10",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-100",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-101",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-102",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-103",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-104",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-105",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-106",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-107",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-108",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-109",
-"enriched_BIGGER_instagram.com_collector_20211102_221942.success-11",
-"enriched_instagram.com_collector_20211106_161542."
-]
-outfile = 'data/postprocessed_data_2711.csv'
+from nltk.stem import WordNetLemmatizer 
 
 
 
 
-def process_CV_result(infile, confidence_thresh=0.5, drop_duplicates=True, lemmatizer=None, split_spaces=True, 
+
+
+
+def process_CV_result(input_file, confidence_thresh=0.5, drop_duplicates=True, lemmatizer=None, split_spaces=True, 
                         lowercase=True, remove_stops=True, remove_punctuation=True):
 
-    with open(infile, 'r', encoding='utf-8') as file:
+    with open(input_file, 'r', encoding='utf-8') as file:
         cv_result = json.load(file)
+
+    if len(cv_result) == 0:
+        print(f"Empty file found: {input_file}")
+        return None
 
     all_column_headings = []
     all_flat_outputs = []
 
-    useful_instagram_keys = ['account','profile_name','id','following','likes','posts_count','followers',
+    useful_instagram_keys = ['account','profile_name','id','following','likes','posts_count','followers', 'image_url',
                             'is_verified', 'datetime','comments','url','video_url','video_view_count','timestamp']
     #'caption' ?
 
@@ -50,6 +38,10 @@ def process_CV_result(infile, confidence_thresh=0.5, drop_duplicates=True, lemma
 
         for key, val in post['instagram'].items():
             if key in useful_instagram_keys:
+
+                if key == 'is_verified' and val == '':
+                    val = 0
+
                 flat_output.append(val)
                 column_headings.append(key)
 
@@ -57,15 +49,18 @@ def process_CV_result(infile, confidence_thresh=0.5, drop_duplicates=True, lemma
         for key, val in post['cvResult'].items():
 
             if key == 'imageType':
-                for type, bool in val.items():
-                    column_headings.append(type)
+                for img_type, bool in val.items():
+                    column_headings.append(img_type)
                     flat_output.append(bool)
 
             if key == 'color':
                 for color_cat, color in val.items():
                     if color_cat == 'isBWImg':
                         column_headings.append(color_cat)
-                        flat_output.append(color)
+                        if color:
+                            flat_output.append(1)
+                        else:
+                            flat_output.append(0)
                     if color_cat == 'dominantColors':   #Could we pass these to a color embedding ? 
                         for c in color:
                             full_description.append(c)
@@ -142,18 +137,42 @@ def process_CV_result(infile, confidence_thresh=0.5, drop_duplicates=True, lemma
     output_df = pd.DataFrame(all_flat_outputs, columns=all_column_headings[0])
     return output_df
 
+if __name__ == '__main__':
 
-output_df = None
-lemmatizer = WordNetLemmatizer()
-for file in infiles:
-    input = 'data/' + file + '.json'
+    nltk.download('wordnet')
+    '''
+    infile = "data/enriched_instagram.com_collector_20211106_161542..json"
+    infiles = [
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-1",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-10",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-100",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-101",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-102",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-103",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-104",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-105",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-106",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-107",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-108",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-109",
+    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-11",
+    "enriched_instagram.com_collector_20211106_161542."
+    ]
+    outfile = 'data/postprocessed_data_2711.csv'
 
-    output = process_CV_result(input, lemmatizer=lemmatizer)
 
-    if output_df is None:
-        output_df = output
-    else:
-        output_df = pd.concat([output_df, output], axis=0)
-        
-output_df.to_csv(outfile)
+    '''
+    output_df = None
+    lemmatizer = WordNetLemmatizer()
+    for file in infiles:
+        input = 'data/' + file + '.json'
+
+        output = process_CV_result(input, lemmatizer=lemmatizer)
+
+        if output_df is None:
+            output_df = output
+        else:
+            output_df = pd.concat([output_df, output], axis=0)
+            
+    output_df.to_csv(outfile)
 
