@@ -23,7 +23,7 @@ path = r"data/images"
 
 
 # this list holds all the image filename
-flowers = []
+images = []
 
 # creates a ScandirIterator aliased as files
 with os.scandir(path) as files:
@@ -31,7 +31,7 @@ with os.scandir(path) as files:
     for file in files:
         if file.name.endswith('.jpg'):
           # adds only the image files to the flowers list
-            flowers.append(file.name)
+            images.append(file.name)
             
 # change the working directory to the path where the images are located
 os.chdir(path)
@@ -56,14 +56,14 @@ data = {}
 p = r"../image_features/features.pkl"
 
 # lop through each image in the dataset
-for flower in flowers:
+for image in images:
     # try to extract the features and update the dictionary
     try:
-        feat = extract_features(flower,model)
-        data[flower] = feat
+        feat = extract_features(image,model)
+        data[image] = feat
     # if something fails, save the extracted features as a pickle file (optional)
     except:
-        print(f"Failed on {flower}")
+        print(f"Failed on {image}")
           
 with open(p,'wb') as file:
     pickle.dump(data,file)
@@ -89,6 +89,10 @@ unique_labels = 8
 pca = PCA(n_components=100, random_state=22)
 pca.fit(feat)
 x = pca.transform(feat)
+
+
+with open('../image_features/pca_features.pkl','wb') as file:
+    pickle.dump(x,file)
 
 # cluster feature vectors
 kmeans = KMeans(n_clusters=unique_labels, random_state=22)

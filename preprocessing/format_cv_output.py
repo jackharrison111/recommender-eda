@@ -5,9 +5,8 @@ import gensim.parsing.preprocessing as pp
 
 # # Download Wordnet through NLTK in python console:
 import nltk
-
 from nltk.stem import WordNetLemmatizer 
-
+nltk.download('wordnet')
 
 
 
@@ -137,36 +136,17 @@ def process_CV_result(input_file, confidence_thresh=0.5, drop_duplicates=True, l
     output_df = pd.DataFrame(all_flat_outputs, columns=all_column_headings[0])
     return output_df
 
+
 if __name__ == '__main__':
 
-    nltk.download('wordnet')
-    '''
-    infile = "data/enriched_instagram.com_collector_20211106_161542..json"
-    infiles = [
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-1",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-10",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-100",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-101",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-102",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-103",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-104",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-105",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-106",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-107",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-108",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-109",
-    "enriched_BIGGER_instagram.com_collector_20211102_221942.success-11",
-    "enriched_instagram.com_collector_20211106_161542."
-    ]
-    outfile = 'data/postprocessed_data_2711.csv'
-
-
-    '''
+    
+    #Example usage: 
+    
     output_df = None
     lemmatizer = WordNetLemmatizer()
-    for file in infiles:
-        input = 'data/' + file + '.json'
+    for file in files:
 
+        input = 'data/' + file + '.json'
         output = process_CV_result(input, lemmatizer=lemmatizer)
 
         if output_df is None:
