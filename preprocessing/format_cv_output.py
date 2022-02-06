@@ -8,12 +8,11 @@ import nltk
 from nltk.stem import WordNetLemmatizer 
 nltk.download('wordnet')
 
+import os
 
 
 
-
-
-def process_CV_result(input_file, confidence_thresh=0.5, drop_duplicates=True, lemmatizer=None, split_spaces=True, 
+def process_CV_result(input_file, confidence_thresh=0.5, drop_duplicates=True,  split_spaces=True, 
                         lowercase=True, remove_stops=True, remove_punctuation=True):
 
     with open(input_file, 'r', encoding='utf-8') as file:
@@ -27,7 +26,7 @@ def process_CV_result(input_file, confidence_thresh=0.5, drop_duplicates=True, l
     all_flat_outputs = []
 
     useful_instagram_keys = ['account','profile_name','id','following','likes','posts_count','followers', 'image_url',
-                            'is_verified', 'datetime','comments','url','video_url','video_view_count','timestamp']
+                            'biography','is_verified', 'datetime','comments','url','video_url','video_view_count','timestamp','caption']
     #'caption' ?
 
     for post in cv_result:
@@ -90,10 +89,8 @@ def process_CV_result(input_file, confidence_thresh=0.5, drop_duplicates=True, l
                     if object['confidence'] > confidence_thresh:
                         full_description.append(object['object'])
 
-            #TODO: Not implemented faces, brands or categories yet
+            #TODO: Not implemented faces, brands or categories yet?
 
-        #Postprocess the individual words using NLP techniques:
-        #The order that these occur might be important, worth checking if there's time
 
         #Split words
         if split_spaces:
@@ -102,6 +99,7 @@ def process_CV_result(input_file, confidence_thresh=0.5, drop_duplicates=True, l
                 [temp_desc.append(s) for s in word.split(' ')]
             full_description = temp_desc
         
+        '''
         #Lowercase
         if lowercase:
             full_description = [word.lower() for word in full_description]
@@ -126,6 +124,8 @@ def process_CV_result(input_file, confidence_thresh=0.5, drop_duplicates=True, l
         if drop_duplicates:
             full_description = list(dict.fromkeys(full_description))
 
+        '''
+
 
         column_headings.append('tokens')
         flat_output.append(full_description)
@@ -141,18 +141,17 @@ if __name__ == '__main__':
 
     
     #Example usage: 
-    
+    outfile = "data/postprocessed/NLP_project_kickoff_data.csv"
+    data_path = 'data/json'
     output_df = None
     lemmatizer = WordNetLemmatizer()
+    files = os.listdir(data_path)
     for file in files:
 
-        input = 'data/' + file + '.json'
+        input = data_path + '/' + file
         output = process_CV_result(input, lemmatizer=lemmatizer)
-
         if output_df is None:
             output_df = output
         else:
             output_df = pd.concat([output_df, output], axis=0)
-            
     output_df.to_csv(outfile)
-
